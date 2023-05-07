@@ -5,7 +5,6 @@ import { GetStaticProps, GetStaticPaths } from 'next';
 import { GraphQLClient, gql } from 'graphql-request';
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // fetch the list of post paths to generate static pages for
   const endpoint = process.env.GRAPHQL_ENDPOINT as string;
   const graphQLClient = new GraphQLClient(endpoint);
 
@@ -36,11 +35,10 @@ export const getStaticPaths: GetStaticPaths = async () => {
 };
 
 export const getStaticProps: GetStaticProps = async (context) => {
-  // fetch the post data for the given path and return it as props
   const endpoint = process.env.GRAPHQL_ENDPOINT as string;
   const graphQLClient = new GraphQLClient(endpoint);
-  const pathArr = context.params.postpath as Array<string> | undefined;
-  const path = pathArr?.join('/');
+  const pathArr = context.params.postpath as Array<string> | undefined ?? [];
+  const path = pathArr.join('/');
 
   if (!path) {
     return {
@@ -107,7 +105,6 @@ interface PostProps {
 const Post: React.FC<PostProps> = (props) => {
   const { post, host, path } = props;
 
-  // to remove tags from excerpt
   const removeTags = (str: string) => {
     if (str === null || str === '') return '';
     else str = str.toString();
@@ -127,22 +124,33 @@ const Post: React.FC<PostProps> = (props) => {
         <meta property="article:published_time" content={post.dateGmt} />
         <meta property="article:modified_time" content={post.modifiedGmt} />
         <meta property="og:image" content={post.featuredImage.node.sourceUrl} />
-                       
-        <title>{post.title}</title>
-      </Head>
-      <div className="post-container">
-        <h1>{post.title}</h1>
-        <Image
-          src={post.featuredImage.node.sourceUrl}
-          alt={post.featuredImage.node.altText || post.title}
-          width={post.featuredImage.node.mediaDetails.width}
-          height={post.featuredImage.node.mediaDetails.height}
-        />
-        <article dangerouslySetInnerHTML={{ __html: post.content }} />
-      </div>
-    </>
-  );
+       <meta
+  property="og:image:alt"
+  content={
+    post.featuredImage.node.altText
+      ? post.featuredImage.node.altText
+      : post.title
+  }
+/>
+
+    <title>{post.title}</title>
+  </Head>
+  <div className="post-container">
+    <h1>{post.title}</h1>
+    <Image
+      src={post.featuredImage.node.sourceUrl}
+      alt={
+        post.featuredImage.node.altText
+          ? post.featuredImage.node.altText
+          : post.title
+      }
+      width={post.featuredImage.node.mediaDetails.width}
+      height={post.featuredImage.node.mediaDetails.height}
+    />
+    <article dangerouslySetInnerHTML={{ __html: post.content }} />
+  </div>
+</>
+);
 };
 
 export default Post;
-
